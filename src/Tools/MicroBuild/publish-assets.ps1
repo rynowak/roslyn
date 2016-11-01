@@ -41,6 +41,7 @@ try
     switch ($branchName)
     {
         "dev15-rc" { } 
+        "UseRCVSSDK" { } 
         default
         {
             if (-not $test)
