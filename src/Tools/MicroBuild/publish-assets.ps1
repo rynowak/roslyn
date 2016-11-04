@@ -42,6 +42,7 @@ try
     {
         "dev15-rc" { } 
         "master" { } 
+        "fix-dotnet-dependencies" { } 
         default
         {
             if (-not $test)
