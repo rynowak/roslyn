@@ -1,0 +1,6 @@
+[submodule "submodule/Razor"]
+	path = submodule/Razor
+	url = git@github.com:aspnet/Razor.git
+[submodule "submodule/project-system"]
+	path = submodule/project-system
+	url = git@github.com:rynowak/project-system.git
