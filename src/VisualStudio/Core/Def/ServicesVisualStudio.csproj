@@ -135,6 +135,8 @@
     <InternalsVisibleToTypeScript Include="StanCore" />
     <InternalsVisibleToFSharp Include="FSharp.Editor" />
     <InternalsVisibleToFSharp Include="FSharp.LanguageService" />
+    <InternalsVisibleToRazor Include="Microsoft.VisualStudio.LanguageServices.Razor" />
+    <InternalsVisibleToRazor Include="Microsoft.VisualStudio.ProjectSystem.Razor" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ManagedEditAndContinueService.vsdconfigxml" />
