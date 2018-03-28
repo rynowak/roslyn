@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Editor;
@@ -293,7 +294,21 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
                 return false;
             }
 
-            navigationNotify = hierarchy as IVsSymbolicNavigationNotify;
+            object real = hierarchy;
+            if (!Marshal.IsComObject(hierarchy))
+            {
+                var unconfiguredProjectHostObject = hierarchy
+                    .GetType()
+                    .GetProperty("InnerHierarchy", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .GetValue(hierarchy);
+
+                real = unconfiguredProjectHostObject
+                    .GetType()
+                    .GetProperty("InnerHierarchy", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                    .GetValue(unconfiguredProjectHostObject);
+            }
+
+            navigationNotify = real as IVsSymbolicNavigationNotify;
             if (navigationNotify == null)
             {
                 return false;

@@ -7,8 +7,10 @@ using System.Runtime.InteropServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Editor;
 using Microsoft.CodeAnalysis.Editor.Shared.Utilities;
+using Microsoft.VisualStudio.LanguageServices.Implementation.Interop;
 using Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem;
 using Microsoft.VisualStudio.Shell.Interop;
+using stdole;
 
 namespace Microsoft.VisualStudio.LanguageServices.Implementation
 {
@@ -26,7 +28,21 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
                 {
                     var itemIDs = hierarchyToItemIDsMap[hierarchy];
 
-                    if (hierarchy is IVsHierarchyRefactorNotify refactorNotify)
+                    object real = hierarchy;
+                    if (!Marshal.IsComObject(hierarchy))
+                    {
+                        var unconfiguredProjectHostObject = hierarchy
+                            .GetType()
+                            .GetProperty("InnerHierarchy", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                            .GetValue(hierarchy);
+
+                        real = unconfiguredProjectHostObject
+                            .GetType()
+                            .GetProperty("InnerHierarchy", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                            .GetValue(unconfiguredProjectHostObject);
+                    }
+
+                    if (real is IVsHierarchyRefactorNotify refactorNotify)
                     {
                         var hresult = refactorNotify.OnBeforeGlobalSymbolRenamed(
                             (uint)itemIDs.Count,
