@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis.Editor.ReferenceHighlighting;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.Editor.Shared.Preview;
 using Microsoft.CodeAnalysis.FindUsages;
+using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Text.Shared.Extensions;
 using Microsoft.VisualStudio.LanguageServices.Implementation.Extensions;
@@ -39,13 +40,15 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
             public DocumentSpanEntry(
                 AbstractTableDataSourceFindUsagesContext context,
                 RoslynDefinitionBucket definitionBucket,
-                DocumentSpan documentSpan,
                 DocumentHighlighting.HighlightSpanKind spanKind,
                 string documentName,
                 Guid projectGuid,
-                SourceText sourceText,
+                DocumentSpan originalDocumentSpan,
+                SourceText originalSourceText,
+                MappedSpanResult mappedSpanResult,
                 ClassifiedSpansAndHighlightSpan classifiedSpans)
-                : base(context, definitionBucket, documentSpan, documentName, projectGuid, sourceText)
+                : base(context, definitionBucket, documentName, projectGuid,
+                      originalDocumentSpan, originalSourceText, mappedSpanResult)
             {
                 _spanKind = spanKind;
                 _classifiedSpansAndHighlights = classifiedSpans;
@@ -66,7 +69,7 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
 
                 var classifiedSpans = _classifiedSpansAndHighlights.ClassifiedSpans;
                 var classifiedTexts = classifiedSpans.SelectAsArray(
-                    cs => new ClassifiedText(cs.ClassificationType, _sourceText.ToString(cs.TextSpan)));
+                    cs => new ClassifiedText(cs.ClassificationType, SourceText.ToString(cs.TextSpan)));
 
                 var inlines = classifiedTexts.ToInlines(
                     Presenter.ClassificationFormatMap,
@@ -159,7 +162,7 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
                 var contentType = contentTypeService.GetDefaultContentType();
 
                 var textBuffer = Presenter.TextBufferFactoryService.CreateTextBuffer(
-                    _sourceText.ToString(), contentType);
+                    SourceText.ToString(), contentType);
 
                 // Create an appropriate highlight span on that buffer for the reference.
                 var key = _spanKind == DocumentHighlighting.HighlightSpanKind.Definition
@@ -179,13 +182,13 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
                 const int AdditionalLineCountPerSide = 3;
 
                 var referenceSpan = this.SourceSpan;
-                var lineNumber = _sourceText.Lines.GetLineFromPosition(referenceSpan.Start).LineNumber;
+                var lineNumber = SourceText.Lines.GetLineFromPosition(referenceSpan.Start).LineNumber;
                 var firstLineNumber = Math.Max(0, lineNumber - AdditionalLineCountPerSide);
-                var lastLineNumber = Math.Min(_sourceText.Lines.Count - 1, lineNumber + AdditionalLineCountPerSide);
+                var lastLineNumber = Math.Min(SourceText.Lines.Count - 1, lineNumber + AdditionalLineCountPerSide);
 
                 return Span.FromBounds(
-                    _sourceText.Lines[firstLineNumber].Start,
-                    _sourceText.Lines[lastLineNumber].End);
+                    SourceText.Lines[firstLineNumber].Start,
+                    SourceText.Lines[lastLineNumber].End);
             }
         }
     }

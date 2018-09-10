@@ -1385,7 +1385,9 @@ namespace Microsoft.CodeAnalysis
             if (newDoc.HasInfoChanged(oldDoc))
             {
                 // ApplyDocumentInfoChanged ignores the loader information, so we can pass null for it
-                ApplyDocumentInfoChanged(documentId, new DocumentInfo(newDoc.State.Attributes, loader: null));
+                ApplyDocumentInfoChanged(
+                    documentId, 
+                    new DocumentInfo(newDoc.State.Attributes, loader: null, documentServiceProvider: newDoc.State.DocumentServices));
             }
 
             // update text if changed

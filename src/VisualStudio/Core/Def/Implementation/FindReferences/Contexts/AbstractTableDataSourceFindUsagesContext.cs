@@ -11,11 +11,9 @@ using Microsoft.CodeAnalysis.DocumentHighlighting;
 using Microsoft.CodeAnalysis.Editor.FindUsages;
 using Microsoft.CodeAnalysis.FindUsages;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem;
 using Microsoft.VisualStudio.Shell.FindAllReferences;
 using Microsoft.VisualStudio.Shell.TableControl;
 using Microsoft.VisualStudio.Shell.TableManager;
-using Roslyn.Utilities;
 
 namespace Microsoft.VisualStudio.LanguageServices.FindUsages
 {
@@ -274,9 +272,11 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
                 var classifiedSpansAndHighlightSpan =
                     await ClassifiedSpansAndHighlightSpanFactory.ClassifyAsync(documentSpan, CancellationToken).ConfigureAwait(false);
 
+                var mappedDocumentSpan = await AbstractDocumentSpanEntry.MapAndGetFirstAsync(documentSpan, sourceText, CancellationToken).ConfigureAwait(false);
+
                 return new DocumentSpanEntry(
-                    this, definitionBucket, documentSpan, spanKind,
-                    projectName, guid, sourceText, classifiedSpansAndHighlightSpan);
+                    this, definitionBucket, spanKind, projectName,
+                    guid, documentSpan, sourceText, mappedDocumentSpan, classifiedSpansAndHighlightSpan);
             }
 
             private TextSpan GetRegionSpanForReference(SourceText sourceText, TextSpan referenceSpan)
@@ -349,7 +349,7 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
                         // If we've been cleared, then just return an empty list of entries.
                         // Otherwise return the appropriate list based on how we're currently
                         // grouping.
-                        var entries = _cleared 
+                        var entries = _cleared
                             ? ImmutableList<Entry>.Empty
                             : _currentlyGroupingByDefinition
                                 ? EntriesWhenGroupingByDefinition

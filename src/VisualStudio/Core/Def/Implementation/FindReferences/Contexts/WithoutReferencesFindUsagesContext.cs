@@ -84,7 +84,9 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
                 var documentSpan = definition.SourceSpans[0];
                 var (guid, projectName, sourceText) = await GetGuidAndProjectNameAndSourceTextAsync(documentSpan.Document).ConfigureAwait(false);
 
-                return new DefinitionItemEntry(this, definitionBucket, documentSpan, projectName, guid, sourceText);
+                var mappedDocumentSpan = await AbstractDocumentSpanEntry.MapAndGetFirstAsync(documentSpan, sourceText, CancellationToken).ConfigureAwait(false);
+
+                return new DefinitionItemEntry(this, definitionBucket, projectName, guid, documentSpan, sourceText, mappedDocumentSpan);
             }
         }
     }
