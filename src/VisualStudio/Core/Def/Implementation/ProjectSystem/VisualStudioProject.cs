@@ -527,7 +527,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
 
         private void OnDynamicFileInfoUpdated(object sender, string filePath)
         {
-            _sourceFiles.ProcessFileChange(MarkDynamicFilePath(filePath));
+            _sourceFiles.ProcessFileChange(filePath, MarkDynamicFilePath(filePath));
         }
 
         private static string GetExtensionWithoutDot(string filePath)
@@ -1064,7 +1064,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
 
                     _project._documentIdToDynamicFileInfoProvider.Add(documentId, fileInfoProvider);
 
-                    if (!_project._eventSubscriptionTracker.Add(fileInfoProvider))
+                    if (_project._eventSubscriptionTracker.Add(fileInfoProvider))
                     {
                         // subscribe to the event when we use this provider the first time
                         fileInfoProvider.Updated += _project.OnDynamicFileInfoUpdated;
@@ -1235,11 +1235,16 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
                 }
             }
 
-            public void ProcessFileChange(string fullFilePath)
+            public void ProcessFileChange(string filePath)
+            {
+                ProcessFileChange(filePath, filePath);
+            }
+
+            public void ProcessFileChange(string originalFilePath, string documentPathMapKey)
             {
                 lock (_project._gate)
                 {
-                    if (_documentPathsToDocumentIds.TryGetValue(fullFilePath, out var documentId))
+                    if (_documentPathsToDocumentIds.TryGetValue(documentPathMapKey, out var documentId))
                     {
                         // We create file watching prior to pushing the file to the workspace in batching, so it's
                         // possible we might see a file change notification early. In this case, toss it out. Since
@@ -1264,12 +1269,12 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
                             IDocumentServiceProvider documentServiceProvider;
                             if (fileInfoProvider == null)
                             {
-                                textLoader = new FileTextLoader(fullFilePath, defaultEncoding: null);
+                                textLoader = new FileTextLoader(originalFilePath, defaultEncoding: null);
                                 documentServiceProvider = null;
                             }
                             else
                             {
-                                var fileInfo = _project._threadingContext.JoinableTaskFactory.Run(() => fileInfoProvider.GetDynamicFileInfoAsync(_project.Id, _project._filePath, fullFilePath, CancellationToken.None));
+                                var fileInfo = _project._threadingContext.JoinableTaskFactory.Run(() => fileInfoProvider.GetDynamicFileInfoAsync(_project.Id, _project._filePath, originalFilePath, CancellationToken.None));
 
                                 textLoader = fileInfo.TextLoader;
                                 documentServiceProvider = fileInfo.DocumentServiceProvider;
