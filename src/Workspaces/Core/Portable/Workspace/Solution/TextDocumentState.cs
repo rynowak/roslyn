@@ -50,7 +50,7 @@ namespace Microsoft.CodeAnalysis
             this.textAndVersionSource = textAndVersionSource;
 
             Attributes = attributes;
-            DocumentServices = documentServiceProvider ?? NoOpDocumentServiceProvider.Instance;
+            Services = documentServiceProvider ?? DefaultDocumentServiceProvider.Instance;
 
             // for now, let it re-calculate if anything changed.
             // TODO: optimize this so that we only re-calcuate checksums that are actually changed
@@ -62,7 +62,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// A <see cref="IDocumentServiceProvider"/> associated with this document
         /// </summary>
-        public IDocumentServiceProvider DocumentServices { get; }
+        public IDocumentServiceProvider Services { get; }
 
         public DocumentId Id
         {
@@ -328,7 +328,7 @@ namespace Microsoft.CodeAnalysis
 
             return new TextDocumentState(
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes,
                 sourceTextOpt: null,
                 textAndVersionSource: newTextSource,
@@ -363,7 +363,7 @@ namespace Microsoft.CodeAnalysis
 
             return new TextDocumentState(
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes,
                 sourceTextOpt: null,
                 textAndVersionSource: newTextSource,
@@ -398,15 +398,28 @@ namespace Microsoft.CodeAnalysis
             return textAndVersion.Version;
         }
 
-        private sealed class NoOpDocumentServiceProvider : IDocumentServiceProvider
+        internal sealed class DefaultDocumentServiceProvider : IDocumentServiceProvider
         {
-            public static readonly NoOpDocumentServiceProvider Instance = new NoOpDocumentServiceProvider();
+            public static readonly DefaultDocumentServiceProvider Instance = new DefaultDocumentServiceProvider();
 
-            private NoOpDocumentServiceProvider() { }
+            private DefaultDocumentServiceProvider() { }
 
             public TService GetService<TService>() where TService : class, IDocumentService
             {
+                if (DocumentOperationService.Instance is TService service)
+                {
+                    return service;
+                }
+
                 return default;
+            }
+
+            private class DocumentOperationService : IDocumentOperationService
+            {
+                public static readonly DocumentOperationService Instance = new DocumentOperationService();
+
+                public bool CanApplyChange => true;
+                public bool SupportDiagnostics => true;
             }
         }
     }

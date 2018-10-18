@@ -334,7 +334,7 @@ namespace Microsoft.CodeAnalysis
             return new DocumentState(
                 this.LanguageServices,
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes.With(sourceCodeKind: options.Kind),
                 options,
                 this.sourceTextOpt,
@@ -358,7 +358,7 @@ namespace Microsoft.CodeAnalysis
             return new DocumentState(
                 _languageServices,
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes.With(name: name),
                 _options,
                 this.sourceTextOpt,
@@ -372,7 +372,7 @@ namespace Microsoft.CodeAnalysis
             return new DocumentState(
                 _languageServices,
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes.With(folders: folders),
                 _options,
                 this.sourceTextOpt,
@@ -386,7 +386,7 @@ namespace Microsoft.CodeAnalysis
             return new DocumentState(
                 _languageServices,
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes.With(filePath: filePath),
                 _options,
                 this.sourceTextOpt,
@@ -434,7 +434,7 @@ namespace Microsoft.CodeAnalysis
             return new DocumentState(
                 this.LanguageServices,
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes,
                 _options,
                 sourceTextOpt: null,
@@ -476,7 +476,7 @@ namespace Microsoft.CodeAnalysis
             return new DocumentState(
                 this.LanguageServices,
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes,
                 _options,
                 sourceTextOpt: textOpt,
@@ -519,7 +519,7 @@ namespace Microsoft.CodeAnalysis
             return new DocumentState(
                 this.LanguageServices,
                 this.solutionServices,
-                this.DocumentServices,
+                this.Services,
                 this.Attributes,
                 _options,
                 sourceTextOpt: null,

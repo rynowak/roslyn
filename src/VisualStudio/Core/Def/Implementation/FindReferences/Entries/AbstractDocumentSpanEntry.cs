@@ -104,7 +104,7 @@ namespace Microsoft.VisualStudio.LanguageServices.FindUsages
 
             public static async Task<MappedSpanResult> MapAndGetFirstAsync(DocumentSpan documentSpan, SourceText sourceText, CancellationToken cancellationToken)
             {
-                var service = documentSpan.Document.State.DocumentServices.GetService<ISpanMappingService>();
+                var service = documentSpan.Document.State.Services.GetService<ISpanMappingService>();
                 if (service == null)
                 {
                     return new MappedSpanResult(documentSpan.Document.FilePath, sourceText.Lines.GetLinePositionSpan(documentSpan.SourceSpan), documentSpan.SourceSpan);

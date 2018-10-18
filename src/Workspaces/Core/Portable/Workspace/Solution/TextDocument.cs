@@ -55,7 +55,7 @@ namespace Microsoft.CodeAnalysis
         /// <summary>
         /// A <see cref="IDocumentServiceProvider"/> associated with this document
         /// </summary>
-        internal IDocumentServiceProvider DocumentServices => State.DocumentServices;
+        internal IDocumentServiceProvider Services => State.Services;
 
         /// <summary>
         /// Get the current text for the document if it is already loaded and available.
