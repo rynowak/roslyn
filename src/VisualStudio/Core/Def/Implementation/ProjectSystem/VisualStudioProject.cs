@@ -602,8 +602,9 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
                 projectId: Id, projectFilePath: _filePath, filePath: dynamicFilePath, CancellationToken.None).Wait(CancellationToken.None);
         }
 
-        private void OnDynamicFileInfoUpdated(object sender, string dynamicFilePath)
+        private void OnDynamicFileInfoUpdated(object sender, DynamicFileChangeEventArgs e)
         {
+            var dynamicFilePath = e.FilePath;
             if (!_dynamicFilePathMaps.TryGetValue(dynamicFilePath, out var fileInfoPath))
             {
                 // given file doesn't belong to this project. 
@@ -611,7 +612,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
                 return;
             }
 
-            _sourceFiles.ProcessFileChange(dynamicFilePath, fileInfoPath);
+            _sourceFiles.ProcessFileChange(dynamicFilePath, fileInfoPath, e);
         }
 
         #endregion
@@ -1330,7 +1331,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
 
             public void ProcessFileChange(string filePath)
             {
-                ProcessFileChange(filePath, filePath);
+                ProcessFileChange(filePath, filePath, args: null);
             }
 
             /// <summary>
@@ -1338,7 +1339,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
             /// </summary>
             /// <param name="projectSystemFilePath">filepath given from project system</param>
             /// <param name="workspaceFilePath">filepath used in workspace. it might be different than projectSystemFilePath. ex) dynamic file</param>
-            public void ProcessFileChange(string projectSystemFilePath, string workspaceFilePath)
+            public void ProcessFileChange(string projectSystemFilePath, string workspaceFilePath, DynamicFileChangeEventArgs args)
             {
                 lock (_project._gate)
                 {
@@ -1358,13 +1359,13 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
 
                         _project._workspace.ApplyChangeToWorkspace(w =>
                         {
-                            if (w.IsDocumentOpen(documentId))
-                            {
-                                return;
-                            }
-
                             if (fileInfoProvider == null)
                             {
+                                if (w.IsDocumentOpen(documentId))
+                                {
+                                    return;
+                                }
+
                                 var textLoader = new FileTextLoader(projectSystemFilePath, defaultEncoding: null);
                                 _documentTextLoaderChangedAction(w, documentId, textLoader);
                             }
@@ -1375,6 +1376,18 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem
                                 // so, it is okay for us to call regular ".Result" on a task here.
                                 var fileInfo = fileInfoProvider.GetDynamicFileInfoAsync(
                                     _project.Id, _project._filePath, projectSystemFilePath, CancellationToken.None).WaitAndGetResult_CanCallOnBackground(CancellationToken.None);
+
+                                if (args.TextContainer != null)
+                                {
+                                    w.OnDocumentOpened(documentId, args.TextContainer);
+                                }
+                                else
+                                {
+                                    if (w.IsDocumentOpen(documentId))
+                                    {
+                                        w.OnDocumentClosed(documentId, fileInfo.TextLoader);
+                                    }
+                                }
 
                                 // Right now we're only supporting dynamic files as actual source files, so it's OK to call GetDocument here
                                 var document = w.CurrentSolution.GetDocument(documentId);

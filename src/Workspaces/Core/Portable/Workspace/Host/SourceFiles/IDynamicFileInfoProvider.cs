@@ -3,6 +3,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.Host
 {
@@ -34,6 +35,24 @@ namespace Microsoft.CodeAnalysis.Host
         /// <summary>
         /// indicate content of a file has updated. the event argument "string" should be same as "filepath" given to <see cref="GetDynamicFileInfoAsync(ProjectId, string, string, CancellationToken)"/>
         /// </summary>
-        event EventHandler<string> Updated;
+        event EventHandler<DynamicFileChangeEventArgs> Updated;
+    }
+
+    internal class DynamicFileChangeEventArgs : EventArgs
+    {
+        public DynamicFileChangeEventArgs(string filePath)
+        {
+            FilePath = filePath;
+        }
+
+        public DynamicFileChangeEventArgs(string filePath, SourceTextContainer textContainer)
+        {
+            FilePath = filePath;
+            TextContainer = textContainer;
+        }
+
+        public string FilePath { get; }
+
+        public SourceTextContainer TextContainer { get; }
     }
 }
